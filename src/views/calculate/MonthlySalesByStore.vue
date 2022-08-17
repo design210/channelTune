@@ -1,0 +1,295 @@
+<template>
+  <section class="container">
+    <h1>스토어별 월 매출</h1>
+    <section class="member-manage">
+      <section class="member-list section-box border-outside">
+        <div class="border">
+          <div class="topbar">
+            <h2>2022년 2월 정기 정산</h2>
+            <div class="d-flex">
+              <div class="company_input">
+                <span>업체</span>
+                <input class="readonly" type="text" name="readonly" id="readonly" :value="sid" readonly />
+                <input type="text" name="company" id="company" :value="companyName" @input="companyName = $event.target.value" />
+                <v-btn small class="ml10 mr30" @click="showModalPopup">검색</v-btn>
+              </div>
+              <input
+                type="text"
+                name="storeName"
+                id="storeName"
+                placeholder="스토어명을 입력해주세요."
+                :value="storeName"
+                @input="storeName = $event.target.value"
+                @keyup.enter="inquireStoreStatus(sid, storeName, companyStoreStatus)"
+              />
+              <div class="status">
+                <span class="ml15 mr5">상태</span>
+                <pull-down
+                  :data="companyStoreStatus"
+                  :code="storeStatusCode"
+                  @selected="companyStoreStatusProp"
+                  class="pull-down w150"
+                  :clear="clearField"
+                ></pull-down>
+                <v-btn small color="primary" dark class="ml10 mr10" @click="inquireStoreStatus(sid, storeName, companyStoreStatus)">조회</v-btn>
+                <v-btn small @click="clear">검색 초기화</v-btn>
+              </div>
+            </div>
+          </div>
+          <table class="tbl mt20 user-list-tbl select-tbl">
+            <caption>
+              스토어 현황 테이블
+            </caption>
+            <colgroup>
+              <col width="90" />
+              <col width="*" />
+              <col width="110" />
+              <col width="100" />
+              <col width="*" />
+              <col width="50" />
+              <col width="70" />
+              <col width="100" />
+              <col width="50" />
+              <col width="50" />
+              <col width="120" />
+              <col width="90" />
+              <col width="98" />
+              <col width="120" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th>고유코드</th>
+                <th class="left">스토어명</th>
+                <th class="left">상권명</th>
+                <th>업체 코드</th>
+                <th class="left">업체명</th>
+                <th>행정구역</th>
+                <th class="left">행정구</th>
+                <th>업종</th>
+                <th>광고사이즈</th>
+                <th>최대광고슬롯수</th>
+                <th>담당에이전트코드</th>
+                <th>담당자이름</th>
+                <th>전화번호</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in list" :key="index">
+                <td>{{ item.companyStoreSid }}</td>
+                <td class="left">{{ item.companyStoreName }}</td>
+                <td class="left">{{ item.companyStoreZone }}</td>
+                <td>{{ item.companyStoreCompanySid }}</td>
+                <td class="left">{{ item.companyStoreCompanyName }}</td>
+                <td>{{ item.companyStoreAdministrativeZoneName1 }}</td>
+                <td class="left">{{ item.companyStoreAdministrativeZoneName2 }}</td>
+                <td>{{ item.companyStoreBusinessTypeName }}</td>
+                <td>{{ item.companyStoreBillboardSize }}</td>
+                <td>{{ item.companyStoreWorkSlot }}</td>
+                <td>{{ item.companyStoreAgentSid }}</td>
+                <td>{{ item.companyStoreAgentUserName }}</td>
+                <td>{{ item.companyStoreAgentUserHp }}</td>
+                <td>{{ item.companyStoreStatusName }}</td>
+              </tr>
+            </tbody>
+            <tfoot v-if="list.length < 1">
+              <tr>
+                <td colspan="14">스토어 리스트가 없습니다.</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="text-center mt30">
+            <v-pagination v-model="page" :length="len" :total-visible="7"></v-pagination>
+          </div>
+        </div>
+      </section>
+      <alim :open="snackbar" :txt="text" :color="color"></alim>
+    </section>
+  </section>
+</template>
+
+<script>
+import PullDown from "@/components/form/PullDown.vue";
+import CompanyListModal from "@/components/modal/common/CompanyList.vue";
+import alim from "@/components/dialog/Alim.vue";
+import { getPopupOpt } from "@/utils/modal";
+import alimMixin from "@/mixins/alim.js";
+import { mapGetters } from "vuex";
+import bus from "@/utils/bus";
+export default {
+  components: {
+    PullDown,
+    alim,
+  },
+  mixins: [alimMixin],
+  props: ["size"],
+  data() {
+    return {
+      sid: null,
+      companyName: "",
+      clearField: false,
+      page: 1,
+      len: null,
+      storeName: null,
+      list: [],
+      storeStatusCode: "SYS21A15B014",
+      companyStoreStatus: null,
+      companyStoreStatusName: "",
+      isNullList: true,
+      excelDatas: [],
+    };
+  },
+  computed: {
+    ...mapGetters("companyStore", ["getCompanyStoreList", "unexposedBatchProcessing"]),
+  },
+  watch: {
+    page() {
+      this.reload(0);
+    },
+    size() {
+      this.reload(0);
+    },
+  },
+  mounted() {
+    this.reload(0);
+  },
+  methods: {
+    async reload(num) {
+      //검색할경우 페이징 초기화
+      if (num == 1) {
+        this.page = 1;
+      }
+      this.inquireStoreStatus();
+    },
+    showModalPopup() {
+      //검색버튼 함수
+      this.$modal.show(CompanyListModal, { update: this.getCompanyName }, getPopupOpt("AdminPersonListModal", "700px", "auto", false));
+    },
+    getCompanyName(data) {
+      //업체 정보를 가져온후 변수에 할당
+      this.sid = data.companySid;
+      this.companyName = data.companyName;
+    },
+    companyStoreStatusProp(data) {
+      //업체 종류 가져오기
+      this.companyStoreStatus = data.sysCodeSid;
+      this.companyStoreStatusName = data.sysCodeName;
+    },
+    // 스토어 현황 데이터 가져오는 function
+    async inquireStoreStatus(companySid = null, storeName = null, companyStoreStatus = null) {
+      companySid === "" ? (companySid = null) : companySid;
+      try {
+        bus.$emit("start:spinner");
+        await this.$store.dispatch("companyStore/COMPANY_STORE_LIST", {
+          size: this.size,
+          page: this.page,
+          companySid: companySid,
+          searchText: storeName,
+          companyStoreStatusList: companyStoreStatus === null ? null : [companyStoreStatus],
+        });
+        if (this.getCompanyStoreList.channeltuneApiResult.errorCode == 200) {
+          const returnData = this.getCompanyStoreList.channeltuneApiResult.companyStore;
+          this.list = returnData.data;
+          this.len = returnData.last_page;
+        } else {
+          this.alim(this.getCompanyStoreList.channeltuneApiResult.errorMessage, this.errorColor);
+        }
+      } catch (error) {
+        this.alim(error, this.errorColor);
+      } finally {
+        bus.$emit("end:spinner");
+      }
+    },
+    clear() {
+      this.sid = null;
+      this.storeName = "";
+      this.companyName = "";
+      this.companyStoreStatus = "";
+      this.companyStoreStatusName = "";
+
+      this.reload(1);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.member-manage {
+  display: flex;
+  justify-content: space-between;
+  & .member-list {
+    width: 100% !important;
+    border: 1px solid #ccc;
+    & .border {
+      padding: 20px;
+      border: 0 !important;
+    }
+  }
+}
+
+.container {
+  padding: 40px 20px;
+  h1 {
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 18px;
+    font-family: "Roboto";
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  & .topbar {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #ccc;
+
+    & h2 {
+      text-decoration: underline;
+      text-underline-position: under;
+    }
+    padding-bottom: 5px;
+    input {
+      width: 200px;
+      height: 32px;
+      padding: 0 10px;
+      border: 1px solid #e5e5e5;
+    }
+
+    & .company_input {
+      span {
+        margin-right: 5px;
+      }
+
+      .readonly {
+        width: 110px;
+        background-color: #f4f4f4;
+        margin-right: 5px;
+      }
+    }
+    .status {
+      display: flex;
+      white-space: nowrap;
+      align-items: center;
+
+      span {
+        margin-left: 5px;
+      }
+    }
+  }
+  .user-list-tbl {
+    & td {
+      cursor: pointer;
+    }
+    & .align {
+      text-align: left;
+    }
+  }
+  .null_data {
+    border-bottom: none;
+    font-weight: 700;
+    font-size: 15px;
+  }
+}
+</style>

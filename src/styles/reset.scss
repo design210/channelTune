@@ -1,0 +1,143 @@
+::selection { background-color: #BFE5E8; color:#000;}
+::-moz-selection { background-color: #BFE5E8; color:#000;}
+//basic common
+::-webkit-scrollbar {width: 10px;}
+::-webkit-scrollbar-track {background: #fff }
+::-webkit-scrollbar-thumb {background: #B8BFC4;border:3px solid #fff;}
+
+html{
+	font-size:10px !important;
+	overflow-y: auto !important;
+    font-family: 'Noto Sans KR', sans-serif;
+	font-weight:400;
+}
+h1{
+    font-size: 2rem;
+	font-weight:700;
+    color:#323232;
+}
+h2{
+    font-size: 1.8rem;
+	font-weight:700;
+    color:#323232;
+}
+h3{
+    font-size: 1.6rem;
+	font-weight:700;
+    color:#323232;
+}
+h4{
+    font-size: 1.4rem;
+	font-weight:700;
+    color:#323232;
+}
+body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,textarea,p,blockquote,th,td,input,select,textarea,button {
+	margin:0;
+	padding:0;	
+}
+fieldset,img {
+	border:0 none
+}
+body{
+	font-size:1.2rem;
+	color:#323232;
+	letter-spacing: -0.03rem;
+}
+img{
+	vertical-align:bottom
+}
+dl,ul,li,ol{
+	margin:0;padding:0;list-style:none
+}
+table,div,*{
+	box-sizing: border-box;
+}
+table{
+	table-layout: fixed;
+	border-collapse:collapse;
+	border-spacing:0;
+	border:0;
+	width:100%;
+}
+caption{font-size:0;}
+*:focus {
+	outline: none
+}
+button{
+	cursor:pointer !important;
+}
+select{
+	-moz-appearance:none;
+	-webkit-appearance:none; 
+	appearance:none;		
+}
+select::-ms-expand {display:none}
+.clearfix:after{
+	display:table;
+	clear:both;
+	content:'';
+	overflow:hidden;
+	visibility:hidden;
+	height:0;
+	width:0;
+}
+.hidden{
+	display:none !important
+}
+.label-hidden{
+	position:absolute;
+	top:0;
+	left:-10000000px;
+}
+input:-webkit-autofill { 
+	-webkit-box-shadow: 0 0 0px 1000px white inset !important; 
+}
+input:focus:-webkit-autofill { 
+	-webkit-box-shadow: 0 0 0px 1000px white inset !important; 
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input::-ms-reveal {
+    display:none;
+}
+a{
+	text-decoration: none;
+    display:inline-block;
+}
+span,em,i{
+    display:inline-block;
+}
+.per100{
+	width:100% !important;
+}
+.cursor{
+	cursor:pointer !important;
+}
+//align
+.left{
+	text-align:left !important
+}
+.right{
+	text-align:right !important
+}
+.center{
+	text-align:center !important
+}
+
+
+//layout
+.col1{
+	width:100%;
+}
+.col2{
+	width:100%;
+	display:flex;
+	justify-content: space-between;
+	& section{
+		width:calc(50% - 10px);
+		border:1px solid #ccc;
+	}
+}
